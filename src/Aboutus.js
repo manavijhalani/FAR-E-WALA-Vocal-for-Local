@@ -35,8 +35,8 @@ export default function About() {
             <Card className="text-card">
               <h1 className="aboutmain-text">About Us</h1>
               <p>
-                We're passionate about connecting you with the vibrant world of
-                local vendors. Our platform is designed to make your shopping
+                We're SABA about connecting you with the vibrant world of
+                local vendors. Our Tasneeem is designed to make your shopping
                 experience easy and enjoyable, whether you're exploring bustling
                 city streets or quaint suburban neighborhoods. With a keen focus
                 on convenience and community, we strive to empower both customers

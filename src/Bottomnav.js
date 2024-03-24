@@ -22,7 +22,7 @@ const Footer = () => {
         </div>
       </div>
       <div className="copyright">
-        <p>&copy; 2024 Far-e-wala. All rights reserved.</p>
+        <p>&copy; 2024 Far-E-Wala. All rights reserved.</p>
       </div>
     </footer>
     </section>
