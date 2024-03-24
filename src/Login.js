@@ -1,19 +1,18 @@
-import React from 'react';
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Grid, Paper, Avatar, TextField, Button, Typography, Link, Checkbox, FormControlLabel } from '@mui/material';
 import { LockOpenOutlined } from '@mui/icons-material';
-import { Link as RouterLink } from 'react-router-dom'; // Import RouterLink from react-router-dom
+import { Link as RouterLink } from 'react-router-dom';
+import { SignInWithGoogle } from './firebase';
+import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
-    const paperStyle = { padding: 20, height: '450px', width: 600, margin: "20px auto" };
+    const paperStyle = { padding: 20, height: '500px', width: 600, margin: "20px auto" };
     const avatarStyle = { backgroundColor: '#1bbd7e' };
     const btnStyle = { margin: '8px 0' };
 
-    // Regular expressions for validation
-    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/; // Alphanumeric and underscore, 3-20 characters
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
     const passwordRegex = /^(?=.[a-z])(?=.[A-Z])(?=.\d)(?=.[!@#$%^&])[a-zA-Z\d!@#$%^&]{8,}$/;
 
-    // State to store form data and validation errors
     const [formData, setFormData] = useState({
         username: '',
         password: ''
@@ -23,7 +22,8 @@ export default function Login() {
         password: ''
     });
 
-    // Handle form field changes
+    const navigate = useNavigate();
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData({
@@ -32,10 +32,8 @@ export default function Login() {
         });
     };
 
-    // Handle form submission
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Validate username
         if (!usernameRegex.test(formData.username)) {
             setErrors(prevErrors => ({
                 ...prevErrors,
@@ -43,7 +41,6 @@ export default function Login() {
             }));
             return;
         }
-        // Validate password
         if (!passwordRegex.test(formData.password)) {
             setErrors(prevErrors => ({
                 ...prevErrors,
@@ -51,9 +48,24 @@ export default function Login() {
             }));
             return;
         }
-        // If validation passes, you can proceed with form submission or further actions
         console.log("Form submitted:", formData);
     };
+
+    const handleGoogleSignIn = async () => {
+        try {
+            SignInWithGoogle();
+        } catch (error) {
+            console.error('Error signing in with Google:', error);
+        }
+    };
+
+    useEffect(() => {
+        // Check if the user is already signed in
+        const name = localStorage.getItem("name");
+        if (name !== null) {
+            navigate('/category'); // Navigate to '/category' if the user is already signed in
+        }
+    }, [navigate]);
 
     return (
         <Grid container justifyContent="center">
@@ -95,6 +107,9 @@ export default function Login() {
                         Sign in
                     </Button>
                 </form>
+                <Button onClick={handleGoogleSignIn} color='primary' variant="contained" style={btnStyle} fullWidth>
+                    Sign in with Google
+                </Button>
                 <Typography>
                     <Link href="#">
                         Forgot password?
@@ -102,7 +117,7 @@ export default function Login() {
                 </Typography>
                 <Typography>
                     Do you have an account?
-                    <RouterLink to="/signup"> {/* Use RouterLink and specify the route to Seller */}
+                    <RouterLink to="/signup">
                         Sign Up
                     </RouterLink>
                 </Typography>
