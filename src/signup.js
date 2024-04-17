@@ -1,70 +1,111 @@
-import * as React from 'react';
+import React, { useState } from 'react';
 import Typography from '@mui/material/Typography';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import TextField from '@mui/material/TextField';
 import LockPersonIcon from '@mui/icons-material/LockPerson';
-import Radio from '@mui/material/Radio';
-import RadioGroup from '@mui/material/RadioGroup';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import FormControl from '@mui/material/FormControl';
-import FormLabel from '@mui/material/FormLabel';
-import { Button } from '@mui/material';
+import Button from '@mui/material/Button';
 import { useNavigate } from 'react-router-dom';
-import backgroundImage from './Background.png'; // Import your background image here
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth'; 
+import 'firebase/compat/database'; 
+import backgroundImage from './Background.png'; 
+import { FormControl, FormControlLabel, RadioGroup, Radio, FormLabel } from '@mui/material';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDM-SSjSjDzaYDBn1x1PJR0oi4Q5e_Dcnc",
+  authDomain: "farewala-569aa.firebaseapp.com",
+  projectId: "farewala-569aa",
+  storageBucket: "farewala-569aa.appspot.com",
+  messagingSenderId: "499790925683",
+  appId: "1:499790925683:web:12da0e00ad9b9c8b87bf06",
+  measurementId: "G-YRKVP16HML"
+};
+
+// Initialize Firebase
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig); 
+}
+
+const db = firebase.database(); 
 
 export default function SignUp() {
-  const [value, setValue] = React.useState('false');
-  const [name, setName] = React.useState('');
-  const [surname, setSurname] = React.useState('');
-  const [phone, setPhone] = React.useState('');
-  const [password, setPassword] = React.useState('');
+  const [name, setName] = useState('');
+  const [surname, setSurname] = useState('');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [value, setValue] = useState('false'); // Added state for seller or not
+  const [otp, setOtp] = useState('');
+  const [otpSubmitted, setOtpSubmitted] = useState(false); // State for tracking OTP submission
   const navigate = useNavigate();
 
   const handleChange = (event) => {
-    const val = event.target.value;
-    setValue(val);
+    setValue(event.target.value);
+  };
+
+  const handleSendOTP = () => {
+    const phoneNumber = '+91' + phone;
+    const recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+      size: 'invisible',
+    });
+
+    firebase.auth().signInWithPhoneNumber(phoneNumber, recaptchaVerifier)
+      .then((confirmationResult) => {
+        // OTP sent successfully
+        const code = prompt('Enter the OTP sent to your phone:');
+        return confirmationResult.confirm(code);
+      })
+      .then((result) => {
+        console.log('Phone number verified:', result);
+        setOtp(result); // Set OTP state
+        setOtpSubmitted(true); // Set OTP submitted state to true
+      })
+      .catch((error) => {
+        console.error('Error verifying phone number:', error);
+        alert('Error verifying phone number. Please try again. ' + error.message);
+      });
   };
 
   const handleSubmit = () => {
-    if (value === 'true') {
-      if (!name || !surname || !phone || !password) {
-        alert('Please fill in all fields');
-      } else if (!/^[0-9]{10}$/.test(phone)) {
-        alert('Please enter a valid 10-digit phone number');
-      } else if (!/^[A-Za-z0-9]{6,}$/.test(password)) {
-        alert('Please enter a valid password (at least 6 characters alphanumeric)');
-      } else {
-      navigate('/signup1');
+    if (!otp) {
+      alert('Please verify OTP first.');
+      return;
     }
-    } 
-    else {
-      if (!name || !surname || !phone || !password) {
-        alert('Please fill in all fields');
-      } else if (!/^[0-9]{10}$/.test(phone)) {
-        alert('Please enter a valid 10-digit phone number');
-      } else if (!/^[A-Za-z0-9]{6,}$/.test(password)) {
-        alert('Please enter a valid password (at least 6 characters alphanumeric)');
-      } else {
-        alert('Form submitted successfully');
-        navigate('/home');
-      }
-    }
+  
+    const userData = {
+      name,
+      surname,
+      phone,
+      password,
+      value // whether user is a seller or not
+    };
+  
+    db.ref('users').push(userData)
+      .then(() => {
+        console.log('User added to Realtime Database');
+        const redirectPath = value === 'true' ? '/signup1' : '/';
+        navigate(redirectPath);
+      })
+      .catch((error) => {
+        console.error('Error adding user to Realtime Database:', error);
+        alert('Error creating user account: ' + error.message);
+      });
   };
-
+  
+  
   return (
     <div
       style={{
-        backgroundImage: `url(${backgroundImage})`, // Set background image
-        backgroundSize: 'cover', // Ensure the image covers the entire container
-        backgroundPosition: 'center', // Center the image
+        backgroundImage: `url(${backgroundImage})`, // Corrected background image syntax
+        backgroundSize: 'cover',
+        backgroundPosition: 'center', 
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        height: '100vh', // Set height to cover the entire viewport
+        height: '100vh', 
       }}
     >
-      <Card sx={{ maxWidth: 600 }}>
+      <Card>
         <CardContent>
           <LockPersonIcon />
           <Typography variant="h2" component="div">
@@ -84,6 +125,7 @@ export default function SignUp() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             sx={{ width: '100%', marginBottom: 2 }}
+            required
           />
           <TextField
             id="surname"
@@ -91,16 +133,16 @@ export default function SignUp() {
             variant="outlined"
             size="small"
             autoComplete="true"
+            autoFocus
             value={surname}
             onChange={(e) => setSurname(e.target.value)}
-            autoFocus
             sx={{ width: '100%', marginBottom: 2 }}
+            required
           />
           <TextField
             id="phoneno"
             label="Phone number"
             variant="outlined"
-            multiline="true"
             size="small"
             autoComplete="true"
             autoFocus
@@ -108,12 +150,12 @@ export default function SignUp() {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             sx={{ width: '100%', marginBottom: 2 }}
+            required
           />
           <TextField
-            id="pass"
+            id="password"
             label="Password"
             variant="outlined"
-            multiline="true"
             size="small"
             autoComplete="true"
             autoFocus
@@ -121,8 +163,9 @@ export default function SignUp() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             sx={{ width: '100%', marginBottom: 2 }}
+            required
           />
-          <FormControl sx={{ width: '100%', marginBottom: 2, display: 'flex', justifyContent: 'center' }}>
+          <FormControl sx={{ width: '100%', marginBottom: 2, display: 'flex', justifyContent: 'center' }} required>
             <FormLabel id="sellerornot" sx={{ marginLeft: 0, fontSize: '1.2rem' }}>Are you a Seller or not</FormLabel>
             <RadioGroup
               row
@@ -144,6 +187,10 @@ export default function SignUp() {
               />
             </RadioGroup>
           </FormControl>
+          <div id="recaptcha-container"></div>
+          <Button variant="outlined" onClick={handleSendOTP} disabled={otpSubmitted}>
+            Get OTP
+          </Button>
           <Button variant="outlined" onClick={handleSubmit}>
             Submit
           </Button>

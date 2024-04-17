@@ -24,12 +24,44 @@ export default function ProductForm() {
   ];
 
   const handleAddProduct = () => {
-    const newProduct = { productName, quantity, price, productType };
-    setProducts([...products, newProduct]);
-    setProductName('');
-    setQuantity('');
-    setPrice('');
-    setProductType('');
+    // Split input values by comma
+    const productNameArray = productName.split(',');
+    const priceArray = price.split(',');
+    const quantityArray = quantity.split(',');
+
+    // Create an array to store product objects
+    const newProducts = [];
+
+    // Check if the lengths of productName, price, and quantity arrays are equal
+    if (
+      productNameArray.length === priceArray.length &&
+      priceArray.length === quantityArray.length
+    ) {
+      // Iterate over each product entry and create a product object
+      for (let i = 0; i < productNameArray.length; i++) {
+        // Construct details string using productName, price, and quantity at index i
+        const details = `${productNameArray[i].trim()} - ${priceArray[i].trim()}`;
+
+        // Create a new product object
+        const newProduct = {
+          productType,
+          details,
+          quantity: quantityArray[i].trim()
+        };
+
+        // Add the new product object to the newProducts array
+        newProducts.push(newProduct);
+      }
+
+      // Set the products state with the newProducts array
+      setProducts([...products, ...newProducts]);
+      setProductName('');
+      setQuantity('');
+      setPrice('');
+      setProductType('');
+    } else {
+      alert('Please ensure all fields have the same number of entries separated by commas.');
+    }
   };
 
   const handleDeleteProduct = () => {
@@ -43,6 +75,14 @@ export default function ProductForm() {
     e.preventDefault();
     if (products.length >= 0) {
       console.log('Submitted Products:', products);
+      // Now you can split productName and price from each product's details before storing in the database
+      const productsToStore = products.map((product) => ({
+        productType: product.productType,
+        productName: product.details.split(' - ')[0],
+        price: product.details.split(' - ')[1],
+        quantity: product.quantity,
+      }));
+      console.log('Products to store in database:', productsToStore);
       navigate('/');
     } else {
       alert('Please add at least one product');
@@ -78,7 +118,6 @@ export default function ProductForm() {
                 fullWidth
                 margin="normal"
                 variant="outlined"
-                
               >
                 {productTypes.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
@@ -87,33 +126,30 @@ export default function ProductForm() {
                 ))}
               </TextField>
               <TextField
-                label="Product Name"
+                label="Product Name (comma separated)"
                 value={productName}
                 onChange={(e) => setProductName(e.target.value)}
                 fullWidth
                 margin="normal"
                 variant="outlined"
-                
               />
               <TextField
-                type="number"
-                label="Quantity"
+                type="text"
+                label="Quantity (comma separated)"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
                 fullWidth
                 margin="normal"
                 variant="outlined"
-              
               />
               <TextField
-                type="number"
-                label="Price"
+                type="text"
+                label="Price (comma separated)"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 fullWidth
                 margin="normal"
                 variant="outlined"
-                
               />
               <IconButton aria-label="add" onClick={handleAddProduct}>
                 Add Product
@@ -133,7 +169,7 @@ export default function ProductForm() {
                   <TextField
                     disabled
                     label="Product Name"
-                    value={product.productName}
+                    value={product.details.split(' - ')[0]}
                     fullWidth
                     margin="normal"
                     variant="outlined"
@@ -149,7 +185,7 @@ export default function ProductForm() {
                   <TextField
                     disabled
                     label="Price"
-                    value={product.price}
+                    value={product.details.split(' - ')[1]}
                     fullWidth
                     margin="normal"
                     variant="outlined"
