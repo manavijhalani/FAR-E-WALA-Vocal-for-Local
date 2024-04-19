@@ -6,8 +6,27 @@ import { Button, IconButton, Card, CardContent, Dialog, DialogTitle, DialogConte
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useNavigate } from 'react-router-dom';
-import backgroundImage from './Background.png'; // Import your background image here
+import backgroundImage from './Background.png'; 
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth'; 
+import 'firebase/compat/database'; 
 
+const firebaseConfig = {
+  apiKey: "AIzaSyDM-SSjSjDzaYDBn1x1PJR0oi4Q5e_Dcnc",
+  authDomain: "farewala-569aa.firebaseapp.com",
+  projectId: "farewala-569aa",
+  storageBucket: "farewala-569aa.appspot.com",
+  messagingSenderId: "499790925683",
+  appId: "1:499790925683:web:12da0e00ad9b9c8b87bf06",
+  measurementId: "G-YRKVP16HML"
+};
+
+// Initialize Firebase
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig); 
+}
+
+const db = firebase.database(); 
 export default function ProductForm() {
   const [productType, setProductType] = useState('');
   const [productName, setProductName] = useState('');
@@ -20,7 +39,8 @@ export default function ProductForm() {
   const productTypes = [
     { value: 'Vegetable', label: 'Vegetable' },
     { value: 'Fruit', label: 'Fruit' },
-    { value: 'Food', label: 'Food' },
+    { value: 'Street Food', label: 'Street Food' },
+    { value: 'Sweets' , label: 'Sweets'},
   ];
 
   const handleAddProduct = () => {
@@ -29,39 +49,41 @@ export default function ProductForm() {
     const priceArray = price.split(',');
     const quantityArray = quantity.split(',');
 
-    // Create an array to store product objects
-    const newProducts = [];
+    // Iterate over each product entry
+    productNameArray.forEach((productName, index) => {
+      const trimmedProductName = productName.trim();
+      const trimmedPrice = priceArray[index].trim();
+      const trimmedQuantity = quantityArray[index].trim();
 
-    // Check if the lengths of productName, price, and quantity arrays are equal
-    if (
-      productNameArray.length === priceArray.length &&
-      priceArray.length === quantityArray.length
-    ) {
-      // Iterate over each product entry and create a product object
-      for (let i = 0; i < productNameArray.length; i++) {
-        // Construct details string using productName, price, and quantity at index i
-        const details = `${productNameArray[i].trim()} - ${priceArray[i].trim()}`;
+      // Check if a product with the same name already exists
+      const existingProductIndex = products.findIndex((product) => {
+        return product.details.split(' - ')[0].trim() === trimmedProductName;
+      });
 
-        // Create a new product object
+      // If a product with the same name exists, update its details
+      if (existingProductIndex !== -1) {
+        const updatedProducts = [...products];
+        const existingProduct = updatedProducts[existingProductIndex];
+        existingProduct.quantity = trimmedQuantity;
+        existingProduct.details = `${trimmedProductName} - ${trimmedPrice}`;
+        setProducts(updatedProducts);
+      } else {
+        // Otherwise, add a new product
+        const details = `${trimmedProductName} - ${trimmedPrice}`;
         const newProduct = {
           productType,
           details,
-          quantity: quantityArray[i].trim()
+          quantity: trimmedQuantity
         };
-
-        // Add the new product object to the newProducts array
-        newProducts.push(newProduct);
+        setProducts((prevProducts) => [...prevProducts, newProduct]);
       }
+    });
 
-      // Set the products state with the newProducts array
-      setProducts([...products, ...newProducts]);
-      setProductName('');
-      setQuantity('');
-      setPrice('');
-      setProductType('');
-    } else {
-      alert('Please ensure all fields have the same number of entries separated by commas.');
-    }
+    // Clear input fields
+    setProductName('');
+    setQuantity('');
+    setPrice('');
+    setProductType('');
   };
 
   const handleDeleteProduct = () => {
@@ -73,17 +95,51 @@ export default function ProductForm() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (products.length >= 0) {
+    if (products.length > 0) {
       console.log('Submitted Products:', products);
-      // Now you can split productName and price from each product's details before storing in the database
-      const productsToStore = products.map((product) => ({
-        productType: product.productType,
-        productName: product.details.split(' - ')[0],
-        price: product.details.split(' - ')[1],
-        quantity: product.quantity,
-      }));
-      console.log('Products to store in database:', productsToStore);
-      navigate('/');
+
+      // Get the phone number of the logged-in user from localStorage
+      const phoneNumber = localStorage.getItem('phone');
+
+      // Retrieve the user's data from the database based on the phone number
+      db.ref('users').orderByChild('phone').equalTo(phoneNumber).once('value')
+        .then((snapshot) => {
+          // Check if the user exists
+          if (snapshot.exists()) {
+            // Get the user data
+            const userData = snapshot.val();
+            const userId = Object.keys(userData)[0];
+            const user = userData[userId];
+
+            // Check if the user is a vendor (value is "true")
+            if (user.value === "true") {
+              // Iterate over each product and store it in the database
+              const promises = products.map((product) => {
+                // Add the product to the "products" node in the database
+                return db.ref('users').child(userId).child('products').push(product);
+              });
+
+              // Execute all promises concurrently
+              Promise.all(promises)
+                .then(() => {
+                  console.log('Products stored in database successfully.');
+                  navigate('/dashboardvendor');
+                })
+                .catch((error) => {
+                  console.error('Error storing products in database:', error);
+                });
+            } else {
+              // User is not a vendor
+              alert('Only vendors can add products.');
+            }
+          } else {
+            // User does not exist
+            alert('User not found.');
+          }
+        })
+        .catch((error) => {
+          console.error('Error retrieving user data:', error);
+        });
     } else {
       alert('Please add at least one product');
     }

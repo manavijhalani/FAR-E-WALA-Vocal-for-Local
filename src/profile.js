@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Grid, Paper, Avatar, Typography } from '@mui/material';
+import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
+import backgroundImage from './bg3.png';
+import { Card, CardContent } from '@mui/material';
+import Avatar from '@material-ui/core/Avatar';
+import { styled } from '@mui/material/styles';
+import Box from '@mui/material/Box';
+import PersonIcon from '@mui/icons-material/Person';
 import firebase from 'firebase/compat/app'; // Update the import statement to use 'compat' for compatibility mode
 import 'firebase/compat/auth'; // Import the auth module
 import 'firebase/compat/database'; // Import the Realtime Database module
-
 const db = firebase.database(); // Get a reference to the Firebase Realtime Database
 
 const Profile = () => {
@@ -28,32 +34,96 @@ const Profile = () => {
     }
   }, []);
 
-  // Define style for Paper component
-  const paperStyle = {
-    padding: 20,
-    margin: 20,
-    elevation: 10 // Adding elevation to match the component prop
-  };
+  const StyledBackgroundPaper = styled(Paper)(({ theme }) => ({
+    backgroundImage: `url(${backgroundImage})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    padding: theme.spacing(2),
+  }));
 
   return (
-    <Grid container justifyContent="center">
-      <Paper style={paperStyle}>
-        <Grid container justifyContent="center" alignItems="center" direction="column">
-          <Avatar src={userData?.avatar} sx={{ width: 100, height: 100, marginBottom: 2 }} />
-          <Typography variant="h5">Profile</Typography>
-        </Grid>
-        {userData ? (
-          <>
-            <Typography variant="h5" gutterBottom>{userData.name}</Typography>
-            <Typography variant="body1" gutterBottom>Phone: {userData.phone}</Typography>
-            {/* Render additional user data here */}
-          </>
-        ) : (
-          <Typography variant="body1">Loading user data...</Typography>
-        )}
-      </Paper>
-    </Grid>
+    <>
+      {userData ? (
+        <>
+          <StyledBackgroundPaper>
+            <Box py={20} />
+          </StyledBackgroundPaper>
+          <Box
+            style={{
+              position: 'relative',
+              marginTop: '-150px',
+              marginLeft: '200px',
+              marginRight: '200px',
+              zIndex: '1',
+              padding: '15px', // Adjust padding here
+            }}
+          >
+            <Card variant="outlined" sx={{ minHeight: '300px', bgcolor: '#C4A484' }}> {/* Adjust minHeight here */}
+              <CardContent>
+                <Box sx={{ textAlign: 'center', position: 'relative' }}>
+                  <Avatar
+                  
+                    style={{ width: '80px', height: '80px', margin: 'auto' }}
+                  >
+                    <PersonIcon />
+                    </Avatar>
+                  <br></br>
+                  <Typography
+                    sx={{
+                      fontSize: 28,
+                      textAlign: 'center',
+                      position: 'absolute',
+                      top: '85px',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      width: '100%',
+                      
+                    }}
+                    color="text.secondary"
+                    gutterBottom
+                  >
+                    Name : {userData.name}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontSize: 28,
+                      textAlign: 'center',
+                      position: 'absolute',
+                      top: '130px',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      width: '100%',
+                    }}
+                    color="text.secondary"
+                    gutterBottom
+                  >
+                    Surname : {userData.surname}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontSize: 28,
+                      textAlign: 'center',
+                      position: 'absolute',
+                      bottom: '-50px',
+                      top: '170px',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      width: '100%',
+                    }}
+                    color="text.secondary"
+                  >
+                    Phone: {userData.phone}
+                  </Typography>
+                </Box>
+              </CardContent>
+            </Card>
+          </Box>
+        </>
+      ) : (
+        <Typography variant="body1">Loading user data...</Typography>
+      )}
+    </>
   );
-};
+}
 
 export default Profile;
