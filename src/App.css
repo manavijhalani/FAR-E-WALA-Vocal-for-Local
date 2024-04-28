@@ -224,7 +224,7 @@
 .Sidebar {
   flex: 1;
   margin-left: 10px;
-  width: 450px; /* Set width for the sidebar (1/4 of the space) */
+  width: 250px; /* Set width for the sidebar (1/4 of the space) */
   background-color: white;
   padding: 20px;
   border: 1px solid black;

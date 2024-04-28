@@ -25,6 +25,8 @@ const Profile = () => {
           const userId = Object.keys(userData)[0];
           const user = userData[userId];
           setUserData(user);
+          console.log('User data found:', user);
+          localStorage.setItem('username', user.name);
         } else {
           console.log('User data not found');
         }

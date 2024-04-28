@@ -21,7 +21,7 @@ function App() {
           <Route path="/tab" element={<BasicTabs/>}/>    
           <Route path="/category" element={<TitlebarImageList/>}/>  
           <Route path="/map" element={<Map/>}/>  
-          <Route path="/" element={<Home />} /> {/* Route for the home page */}
+          <Route path="/" element={<Home />} /> 
           <Route path='/profile' element={<Profile />}/>
           <Route path='/dashboard' element={<Dashboard />}/>
           <Route path='/favourite' element={<Favorite />}/>

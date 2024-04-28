@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { styled } from '@mui/material/styles';
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
@@ -16,56 +16,50 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
 }));
 
 const StyledBackgroundPaper = styled(Paper)(({ theme }) => ({
-  backgroundImage: `url(${backgroundImage})`, // Apply background image here
+  backgroundImage: `url(${backgroundImage})`, 
   backgroundSize: 'cover',
   backgroundPosition: 'center',
   padding: theme.spacing(2),
 }));
 
-// Simulated data fetched from Firebase
-const favoritesData = [
-  {
-    id: 1,
-    vendername: "Vender Name 1",
-    message: "This is a message 1"
-  },
-  {
-    id: 2,
-    vendername: "Vender Name 2",
-    message: "This is a message 2"
-  },
-  // Add more items as needed
-];
 
-const username = "Saba"; // Simulated username from profile
 
 export default function Favorite() {
-  const numFavorites = favoritesData.length;
+  const [favorites, setFavorites] = useState([]);
+  const username = localStorage.getItem('username');
+  useEffect(() => {
+    // Get favorites data from localStorage
+    const storedFavorites = JSON.parse(localStorage.getItem('favorites')) || [];
+    setFavorites(storedFavorites);
+  }, []);
+
+  const numFavorites = favorites.length;
 
   return (
     <>
       <StyledBackgroundPaper>
-       <br></br>
-       <br></br>
-       <br></br>
-       <br></br><br></br>
-       <br></br><br></br>
-       <br></br><br></br>
-       <br></br>
+        <br />
+        <br />
+        <br />
+        <br />
+        <br />
+        <br />
+        <br />
+        <br />
       </StyledBackgroundPaper>
-      <br></br>
+      <br />
       <Typography variant="h4" gutterBottom>{username}'s Favorites ({numFavorites})</Typography>
       <Grid container justifyContent="center">
         <Grid item xs={12} md={6}>
-          {favoritesData.map((item) => (
-            <StyledPaper key={item.id}>
+          {favorites.map((user) => (
+            <StyledPaper key={user.id}>
               <Grid container alignItems="center" spacing={2}>
                 <Grid item>
                   <Avatar><PermIdentityIcon /></Avatar>
                 </Grid>
                 <Grid item xs>
-                  <Typography variant="subtitle1">{item.vendername}</Typography>
-                  <Typography variant="body2">{item.message}</Typography>
+                  <Typography variant="subtitle1">{user.name} {user.surname}</Typography>
+                  <Typography variant="body2">Phone: {user.phone}</Typography>
                 </Grid>
               </Grid>
             </StyledPaper>

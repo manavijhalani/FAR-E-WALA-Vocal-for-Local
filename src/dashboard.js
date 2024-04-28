@@ -14,7 +14,6 @@ import { Drawer } from '@material-ui/core';
 import Favorite from './favourite'; 
 import Profile from './profile';
 import TitlebarImageList from './category';
-import { Category } from '@mui/icons-material';
 
 const drawerWidth = 240;
 
