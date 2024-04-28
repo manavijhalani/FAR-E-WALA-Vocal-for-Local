@@ -208,3 +208,25 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
+.map-container {
+  margin-top: 10px;
+  margin-left: 10px;
+  display: flex; /* Use flexbox for horizontal layout */
+  width: 1200px; /* Adjust width as needed */
+  height: max-content;
+}
+
+.map {
+  flex: 4; /* Take up 3/4 of the space */
+  height: 700px; /* Set height for the map */
+}
+
+.Sidebar {
+  flex: 1;
+  margin-left: 10px;
+  width: 450px; /* Set width for the sidebar (1/4 of the space) */
+  background-color: white;
+  padding: 20px;
+  border: 1px solid black;
+}
+
