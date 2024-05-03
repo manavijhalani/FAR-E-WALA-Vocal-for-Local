@@ -63,7 +63,8 @@ const Sidebar = ({ children }) => {
         <h2>Vendors near you:</h2>
         {userArray.map((user, index) => {
           const matchingProducts = user.products && Object.values(user.products).filter(product => product.productType === category);
-          if (matchingProducts.length > 0) {
+
+          if (matchingProducts.length > 0 ) {
             return (
               <div key={user.id} className="vendor-card">
                 <h3>{user.name} {user.surname}</h3>

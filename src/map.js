@@ -1,11 +1,57 @@
-import './App.css';
+import React, { useState, useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
-import React from 'react';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import Sidebar from './sidebar';
+import { getDatabase, ref, onValue } from 'firebase/database';
+import { initializeApp } from 'firebase/app';
+import 'firebase/compat/database';
 
+// Initialize Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyDM-SSjSjDzaYDBn1x1PJR0oi4Q5e_Dcnc",
+  authDomain: "farewala-569aa.firebaseapp.com",
+  projectId: "farewala-569aa",
+  storageBucket: "farewala-569aa.appspot.com",
+  messagingSenderId: "499790925683",
+  appId: "1:499790925683:web:12da0e00ad9b9c8b87bf06",
+  measurementId: "G-YRKVP16HML"
+};
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getDatabase(firebaseApp);
+const usersRef = ref(db, 'users');
 
 function Map() {
+  const [vendorArray, setVendorArray] = useState([]);
+
+  useEffect(() => {
+    // Listen for changes at the 'users' reference
+    const unsubscribe = onValue(usersRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data && typeof data === 'object') {
+        // Convert data object to array of vendors with location
+        const vendors = Object.values(data).map(user => {
+          if (user.location) {
+            return {
+              latitude: user.location.latitude,
+              longitude: user.location.longitude,
+              ...user
+            };
+          }
+          return null;
+        }).filter(Boolean);
+
+        // Update state with filtered vendor array
+        setVendorArray(vendors);
+        
+      }
+    });
+
+    // Clean up by unsubscribing when the component unmounts
+    return () => {
+      unsubscribe(); // Detach the listener
+    };
+  }, []); // Run effect only once on component mount
+
   const geolocation = () => {
     document.getElementById('buttondisable').style.visibility = 'hidden';
     if ('geolocation' in navigator) {
@@ -13,35 +59,9 @@ function Map() {
     }
   };
 
-  function toRadians(degrees) {
-    return degrees * (Math.PI / 180);
-  }
-
-  const haversine = (vendorlat, vendorlong, mypositionlat, mypositionlong) => {
-    const R = 6371; // Radius of the Earth in kilometers
-
-    const Lat1 = toRadians(vendorlat);
-    const Lat2 = toRadians(mypositionlat);
-    const Long1 = toRadians(vendorlong);
-    const Long2 = toRadians(mypositionlong);
-
-    const ΔLat = Lat2 - Lat1;
-    const ΔLong = Long2 - Long1;
-
-    const a = Math.sin(ΔLat / 2) * Math.sin(ΔLat / 2) +
-              Math.cos(Lat1) * Math.cos(Lat2) *
-              Math.sin(ΔLong / 2) * Math.sin(ΔLong / 2);
-
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    const distance = R * c; // Distance in kilometers
-
-    console.log(distance); // Output distance in kilometers
-
-    return distance;
-  };
-
   function success(position) {
+    console.log("User position:", position);
+
     mapboxgl.accessToken = 'pk.eyJ1IjoibWFuYXZpMTIzIiwiYSI6ImNsc3hjdjAzcTAxb3kycXAya3IyNnl3djgifQ.vyfIAPnhABA9sgvga4F6XA';
     const map = new mapboxgl.Map({
       container: 'map',
@@ -50,32 +70,38 @@ function Map() {
       zoom: 8
     });
 
-    const marker = new mapboxgl.Marker({ color: "black" });
-    marker.setLngLat([position.coords.longitude, position.coords.latitude]).addTo(map);
+    map.on('load', () => {
+      const userMarker = new mapboxgl.Marker({ color: "black" });
+      userMarker.setLngLat([position.coords.longitude, position.coords.latitude]).addTo(map);
 
-    let vendors = [
-      ['Ram Fruits', 19.0760, 72.8777],
-      ['PZ Panipuri', 19.0822, 72.8816],
-      ['shyamsabzi', 19.2077, 72.8626]
-    ];
+      vendorArray.forEach((vendor) => {
+        console.log("Vendor:", vendor);
+        if (vendor.products && typeof vendor.products === 'object') {
+          const dist = haversine(vendor.latitude, vendor.longitude, position.coords.latitude, position.coords.longitude);
+          if (dist <= 10) {
+            const popupContent = `
+              <h3>${vendor.name} ${vendor.surname}</h3>
+              <p>Phone: ${vendor.phone}</p>
+              <h4>Products:</h4>
+              <ul>
+                ${Object.values(vendor.products).map(product => `
+                  <li>
+                    <strong>Details:</strong> ${product.details}<br />
+                    <strong>Product Type:</strong> ${product.productType}<br />
+                    <strong>Quantity:</strong> ${product.quantity}<br />
+                  </li>
+                `).join('')}
+              </ul>
+               `;
 
-    map.on('load', function () {
-      vendors.forEach(function (vendor) {
-        let dist = haversine(vendor[1], vendor[2], position.coords.latitude, position.coords.longitude);
-        console.log(dist);
-        if (dist <= 10) {
-          const marker = new mapboxgl.Marker({ color: "blue" });
-          marker.setLngLat([vendor[2], vendor[1]]); // [lng, lat] format
-          marker.textContent = vendor[0];
-          marker.addTo(map);
+            const popup = new mapboxgl.Popup({ offset: 15 })
+              .setHTML(popupContent);
 
-          const popup = new mapboxgl.Popup({ offset: 15 })
-            .setHTML(`<h5>${vendor[0]}</h5>`);
-
-          marker.setPopup(popup);
-
-          // Open the popup by default
-          popup.addTo(map);
+            new mapboxgl.Marker({ color: "blue" })
+              .setLngLat([vendor.longitude, vendor.latitude])
+              .setPopup(popup)
+              .addTo(map);
+          }
         }
       });
     });
@@ -85,15 +111,37 @@ function Map() {
     alert("Something went wrong");
   }
 
+  // Function to calculate haversine distance
+  function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Radius of the Earth in kilometers
+    const φ1 = toRadians(lat1);
+    const φ2 = toRadians(lat2);
+    const Δφ = toRadians(lat2 - lat1);
+    const Δλ = toRadians(lon2 - lon1);
+
+    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c; // Distance in kilometers
+
+    return distance;
+  }
+
+  // Function to convert degrees to radians
+  function toRadians(degrees) {
+    return degrees * (Math.PI / 180);
+  }
+
   return (
-  <>
-   <button class="location-button" id='buttondisable' onClick={geolocation}>Get location</button>
-  <div className="map-container">
-    <div className="map" id="map"></div>
-    <Sidebar />
-  </div>
- 
-  </>
+    <>
+      <button className="location-button" id='buttondisable' onClick={geolocation}>Get location</button>
+      <div className="map-container">
+        <div className="map" id="map"></div>
+        <Sidebar />
+      </div>
+    </>
   );
 }
 
