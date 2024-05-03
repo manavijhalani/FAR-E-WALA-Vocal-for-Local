@@ -22,7 +22,8 @@ if (!firebase.apps.length) {
 }
 
 export default function Login() {
-  const paperStyle = { padding: 20, height: '500px', width: 600, margin: "20px auto" };
+  
+  const paperStyle = { padding: 20, height: '500px', width: 600, margin: "20px auto"};
   const avatarStyle = { backgroundColor: '#1bbd7e' };
   const btnStyle = { margin: '8px 0' };
 
@@ -78,7 +79,7 @@ export default function Login() {
         <form onSubmit={handleSubmit}>
           <TextField 
             label='Username' 
-            placeholder='Enter username' 
+            placeholder='Enter phone number' 
             fullWidth 
             required 
             margin="normal" 
