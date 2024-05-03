@@ -78,7 +78,7 @@ export default function Login() {
         </Grid>
         <form onSubmit={handleSubmit}>
           <TextField 
-            label='Username' 
+            label='Phone Number' 
             placeholder='Enter phone number' 
             fullWidth 
             required 
