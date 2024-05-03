@@ -7,14 +7,16 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import AccountCircleIcon from '@material-ui/icons/AccountCircle';
 import FavoriteIcon from '@material-ui/icons/Favorite';
-import NotificationsIcon from '@material-ui/icons/Notifications';
 import LocalOfferIcon from '@material-ui/icons/LocalOffer';
 import Typography from '@material-ui/core/Typography';
 import { Drawer } from '@material-ui/core';
 import Favorite from './favourite'; 
 import Profile from './profile';
 import TitlebarImageList from './category';
-
+import LogoutIcon from '@mui/icons-material/Logout';
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/database';
+import { useNavigate } from 'react-router-dom';
 const drawerWidth = 240;
 
 const useStyles = makeStyles((theme) => ({
@@ -45,6 +47,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const Dashboard = () => {
+  const navigate=useNavigate();
   const classes = useStyles();
   const [currentContent, setCurrentContent] = useState('profile'); // Set initial content to 'home'
   const handleClickAccount = () => {
@@ -56,7 +59,16 @@ const Dashboard = () => {
   const handleClickFavorites = () => {
     setCurrentContent('favorites');
   };
-
+  const logout=()=>{
+    firebase.auth().signOut().then(() => {
+      // Sign-out successful.
+    }).then(() => {
+      console.log('Location updated successfully.');
+      navigate('/');
+    }).catch((error) => {
+      console.error('Error updating location:', error);
+    });
+  };
   return (
     <div className={classes.root}>
       <Drawer
@@ -80,13 +92,14 @@ const Dashboard = () => {
               <ListItemIcon><FavoriteIcon /></ListItemIcon>
               <ListItemText primary="Favorites" />
             </ListItem>
-            <ListItem button>
-              <ListItemIcon><NotificationsIcon /></ListItemIcon>
-              <ListItemText primary="Notifications" />
-            </ListItem>
+            
             <ListItem button onClick={handleClickCategory}>
               <ListItemIcon><LocalOfferIcon /></ListItemIcon>
               <ListItemText primary="Category" />
+            </ListItem>
+            <ListItem button onClick={logout}>
+              <ListItemIcon><LogoutIcon/></ListItemIcon>
+              <ListItemText primary="Log out" />
             </ListItem>
           </List>
         </div>
