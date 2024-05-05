@@ -7,7 +7,6 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import AccountCircleIcon from '@material-ui/icons/AccountCircle';
 import ProductForm from './signup1';
-import NotificationsIcon from '@material-ui/icons/Notifications';
 import Typography from '@material-ui/core/Typography';
 import { Drawer } from '@material-ui/core';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -151,10 +150,6 @@ const Dashboardvendor = () => {
             <ListItem button onClick={handleClickProduct}>
               <ListItemIcon><ShoppingCartIcon /></ListItemIcon>
               <ListItemText primary="Editing products" />
-            </ListItem>
-            <ListItem button>
-              <ListItemIcon><NotificationsIcon /></ListItemIcon>
-              <ListItemText primary="Notifications" />
             </ListItem>
             <ListItem button>
               <ListItemIcon><LocationOnIcon /></ListItemIcon>
